@@ -1,6 +1,6 @@
 # CLAUDE.md — Guía del proyecto
 
-Generador de **carruseles de Instagram (1080×1350, 4:5)** para Claude Code. El usuario dicta un tema; la skill elige el tipo REPTINAC, escribe el copy persuasivo y renderiza los 7–8 slides listos para publicar. Hermana de `/historias-ig` (formato 9:16) — comparten brief, fotos, logos y biblioteca de contenido vía junctions/hard links.
+Generador de **carruseles de Instagram (1080×1350, 4:5)** para Claude Code. El usuario dicta un tema; la skill elige el tipo REPTINAC, escribe el copy persuasivo, gestiona fondos IA + scraping Apify + composiciones editoriales, y renderiza los 7–8 slides listos para publicar. Hermana de `/historias-ig` (formato 9:16) — comparten brief, fotos, logos y biblioteca de contenido vía junctions/hard links.
 
 ## ⚠️ Regla de oro
 **Nunca generes imágenes sin que el usuario apruebe el copy exacto de cada slide.** Muestra el copy (título, subtítulo, texto extra, CTA, etiqueta) slide por slide, espera el OK explícito, y solo entonces ejecuta `generate.py`. Cada fondo IA con `google/nano-banana` cuesta ~$0.02; con `nano-banana-pro` ~$0.12 → gastar sin aprobación quema dinero real.
@@ -16,36 +16,51 @@ Generador de **carruseles de Instagram (1080×1350, 4:5)** para Claude Code. El 
 
 ## Estructura
 ```
-skill/carruseles.md           ← Cerebro de la skill (flujo, onboarding, reglas)
-skill/biblioteca-contenido.md ← 8 tipos REPTINAC (compartida con historias-ig via hard link)
-scripts/generate.py           ← Motor de render (lee plan.json → PNG 1080×1350)
-scripts/utils.py              ← Pipeline de imagen (load_bg cover|fit, fondos, texto)
-scripts/scan_fotos.py         ← Cataloga fotos/ → catalogo.json
-scripts/telegram_enviar.py    ← Envía set al celular vía bot de Telegram
-scripts/compose_cta_bg.py     ← Compone fondo IA + screenshot como card flotante
-scripts/kie_edit.py           ← Edita imágenes con nano-banana-pro (image-to-image)
-config.json                   ← Marca + brief (privado, en .gitignore)
-fotos/ logos/ fonts/ output/  (todos en .gitignore)
+skill/carruseles.md             ← Cerebro de la skill (flujo, onboarding, reglas)
+skill/biblioteca-contenido.md   ← 8 tipos REPTINAC (compartida con historias-ig via hard link)
+scripts/generate.py             ← Motor de render (lee plan.json → PNG 1080×1350) + resolve_foto_path()
+scripts/utils.py                ← Pipeline de imagen (load_bg cover|fit, fondos, texto)
+scripts/scan_fotos.py           ← Cataloga fotos/ → catalogo.json
+scripts/telegram_enviar.py      ← Envía set al celular + caption con --mensaje-final
+scripts/compose_cta_bg.py       ← Compone fondo IA + screenshot como card → fotos/_compuestas/
+scripts/compose_iglesia_vs_ia.py ← Ejemplo: cover split (2 cutouts + fondo dramático) → fotos/_compuestas/
+scripts/kie_edit.py             ← Edita imágenes con nano-banana-pro (image-to-image)
+scripts/buscar_imagenes.py      ← Scraper Apify (google-images-scraper) → fotos/_scraping/<query>/
+scripts/check_kie.py            ← Health check de la API de Kie
+config.json                     ← Marca + brief (privado, en .gitignore)
+catalogo_detallado.json         ← Catálogo curado con arcos narrativos (gitignored — contiene historia personal)
+fotos/                          ← FOTOS ORIGINALES (intactas)
+  ├── _cutouts/                 ← Cutouts transparentes (rembg birefnet-general)
+  ├── _compuestas/              ← Composiciones de scripts (compose_*.py)
+  ├── _historicas/              ← Apify scraping seleccionado para uso editorial
+  ├── _scraping/                ← Apify scraping crudo (todas las opciones por query)
+  └── _deprecated/              ← Intentos fallidos / versiones obsoletas
+logos/ fonts/ output/           (todos en .gitignore)
 ```
+
+**Regla de carpetas:** las fotos de Diego viven en `fotos/` raíz. Todo lo que GENERA o DESCARGA la skill va a una subcarpeta con prefijo `_`. El motor tiene `resolve_foto_path()` que busca automáticamente en todas las subcarpetas — en el `plan.json` basta poner el nombre del archivo sin path.
 
 ## Flujo de generación
 1. Leer `config.json` (marca + brief). Si no existe → onboarding (ver `skill/carruseles.md`).
 2. Pedir **tema + objetivo**.
 3. Leer `skill/biblioteca-contenido.md` y elegir **tipo REPTINAC** (priorizar los que brillan en carrusel: Transformación, Engagement Top N, Polarización, Autoridad, Niveles de Consciencia, Conversión).
-4. Escanear fotos (`scan_fotos.py`); consultar `catalogo_detallado.json` si existe.
-5. Escribir el **plan.json** (un objeto por slide) y **mostrar el copy para aprobación**.
-6. Tras el OK: `python scripts/generate.py --plan plan.json --proj-dir .`
-7. Mostrar resultados y ofrecer envío por Telegram (`telegram_enviar.py`).
+4. Si existe `catalogo_detallado.json`, consultarlo para **identificar fotos del catálogo** que encajen con el tema (mapeo `_mapeo_uso_estrategico` y `_recomendaciones_por_tipo_REPTINAC`).
+5. Si hace falta scraping (mockups reales, imágenes históricas), seguir protocolo Apify (validar query con usuario antes de scrapear).
+6. Escribir el **plan.json** (un objeto por slide) y **mostrar el copy para aprobación**.
+7. Tras el OK: `python scripts/generate.py --plan plan.json --proj-dir .`
+8. Mostrar resultados y ofrecer envío por Telegram (`telegram_enviar.py` con `--mensaje-final caption.md`).
 
 ## Schema del plan (campos por slide)
 
 ### Básicos
-- `tipo`: `hook` para slide 1, `cta` para último; descriptivo para intermedios (`refuerzo`, `puesto5`, `mito`, etc).
+- `tipo`: `hook` para slide 1, `cta` para último; descriptivo para intermedios (`refuerzo`, `puesto5`, `mito`, `ejemplo_*`, etc).
 - `titulo`, `subtitulo`, `texto_extra`.
-- `foto`: nombre de archivo en `fotos/` (o `null`).
+- `foto`: nombre de archivo (el motor resuelve la subcarpeta).
 - `fondo_ia`: objeto `{prompt, model, cache_path}`. Modelo: `"google/nano-banana"` standard | `"nano-banana-pro"` premium.
 - `texto_pos`: `"auto"` (default) | `"top"` | `"center"` | `"bottom"`.
-- `etiqueta` (hook), `palabras_clave`, `logos`, `cta_palabra`, `cta_verbo`.
+- `text_y_top` / `text_y_bottom`: override de banda de texto (útil cuando una composición tiene cutouts que chocan con la banda automática).
+- `etiqueta`: (solo hook) píldora superior. `null` = opt-out explícito (no dibujar). Ausente del slide = usar default del config.
+- `palabras_clave`, `logos`, `cta_palabra`, `cta_verbo`.
 
 ### Modo híbrido (slide hook con foto cutout + fondo IA combinados)
 - `foto_lado`: `"right"` (default) | `"left"`.
@@ -55,11 +70,11 @@ fotos/ logos/ fonts/ output/  (todos en .gitignore)
 ### Foto como fondo (modo cover|fit)
 - `foto_modo`: `"cover"` (default, llena el lienzo) | `"fit"` (entra entera con padding negro).
 - `foto_y_pos`: `"top"` | `"center"` | `"bottom"` (solo aplica en modo fit).
-- `foto_darken`: 0.0–1.0 (default 0.55). Subir para fotos busy (screenshots, dashboards).
+- `foto_darken`: 0.0–1.0 (default 0.55). Subir para fotos busy (screenshot, dashboard).
 - `aplicar_gradient`: bool (default true). False cuando la foto ya viene con gradient pre-compuesto.
 
 ### Cutout sobrepuesto adicional (foto_cutout)
-- `foto_cutout`: nombre de archivo en `fotos/` (preferiblemente transparente — usar `rembg` con `birefnet-general`).
+- `foto_cutout`: nombre de archivo (preferiblemente transparente — usar `rembg` con `birefnet-general`).
 - `foto_cutout_h`: alto en píxeles (default 580).
 - `foto_cutout_margin_right`: margen al borde derecho (default 40).
 - `foto_cutout_margin_bottom`: margen al borde inferior (default 40, usar 0 para full bleed).
@@ -77,32 +92,55 @@ fotos/ logos/ fonts/ output/  (todos en .gitignore)
 - **Colocación inteligente:** `pick_text_band` detecta contenido del cutout transparente y evita esa zona.
 - **Fondos:** foto real (modo cover|fit) → IA Kie (`google/nano-banana` ~$0.02; `nano-banana-pro` ~$0.12) → sólido.
 - **Cache de fondos IA:** `fondo_ia.cache_path: "output/.../bg_NN.png"` reusa sin gastar Kie.
+- **Resolución de paths:** `resolve_foto_path()` busca en `fotos/` → `_compuestas/` → `_cutouts/` → `_historicas/` → `_deprecated/` → `_scraping/*/`.
 - **Chips de marca:** `logos:[...]` usa `logos/<slug>.png` si existe; si no, muestra el nombre como pill blanco.
-- **CTA:** `Comenta [PALABRA] y te envío [recurso]`. Palabra en MAYÚSCULAS, 3–8 letras, sin acentos (esta regla se puede romper si el usuario insiste — Diego usa "AUTOMATIZAR", 10 letras).
+- **CTA:** `Comenta [PALABRA] y te envío [recurso]`. Palabra en MAYÚSCULAS, 3–8 letras, sin acentos (regla flexible — Diego usa "AUTOMATIZAR" 11 letras o "SUPERPODER" 10).
 - **Ejecutar siempre con** `python -X utf8` (la consola Windows puede no ser UTF-8).
 
 ## Pipeline avanzado
 
-### Composiciones pre-hechas (compose_cta_bg.py)
-Para slides editoriales (típicamente el CTA con prueba social), `scripts/compose_cta_bg.py` genera un fondo IA con `nano-banana-pro` y pega el screenshot de IG como banner full-width con sombra inferior. Resultado se guarda como `fotos/Screen Instagram editorial.png` y se usa con `foto_modo: "cover"`, `aplicar_gradient: false`, `cta_extra_veil: false`.
+### Composiciones pre-hechas (compose_*.py)
+Cuando el motor no alcanza para un layout específico, los scripts `compose_*.py` componen elementos manualmente y guardan el resultado en `fotos/_compuestas/`. Después se referencian normal en el plan.
+
+- **`compose_cta_bg.py`** — genera fondo IA cinematográfico con `nano-banana-pro` y compone el screenshot de IG como banner full-width con sombra inferior para slides CTA con prueba social.
+- **`compose_iglesia_vs_ia.py`** — ejemplo de cover split: 2 cutouts (Papa Leo XIV + Diego) sobre fondo cinematográfico dramático (catedral vs servidores). Reutilizable para covers tipo "X vs Diego".
 
 ### Edición de imágenes con IA (kie_edit.py)
-`scripts/kie_edit.py` permite editar una imagen local con `nano-banana-pro` (image-to-image). Sube la imagen a un host público (catbox.moe → tmpfiles.org → 0x0.st con fallback) y llama al endpoint con `image_urls`. **Advertencia:** los modelos generativos pueden alterar caras, textos y números — útil para edits simples, NO para preservar identidad/contenido crítico.
+`scripts/kie_edit.py` permite editar una imagen local con `nano-banana-pro` (image-to-image). Sube la imagen a un host público (catbox.moe → tmpfiles.org → 0x0.st con fallback) y llama al endpoint con `image_urls`.
+
+⚠️ **Advertencia importante:** los modelos generativos pueden alterar caras, textos y números. Útil para edits simples sin contenido crítico. **NO sirve para preservar identidad/contenido exacto** — la IA "reimagina" en lugar de editar pixel-perfect. Lecciones de este proyecto:
+- Intento dark mode del screenshot IG → la IA cambió el avatar y truncó textos
+- Intento quitar lanyard del cutout → la IA cambió aspect ratio y reinterpretó la camisa
 
 ### Cutouts con rembg
-Modelo por defecto: `birefnet-general` (~970MB, state-of-the-art). Esencial para detalles finos como dedos apuntando. El modelo `u2net` (default de rembg) causa dedos semi-transparentes contra fondos oscuros.
+Modelo por defecto: **`birefnet-general`** (~970MB, state-of-the-art 2024). Esencial para detalles finos como dedos apuntando. El modelo `u2net` (default de rembg) causa dedos semi-transparentes contra fondos oscuros.
+
 ```python
 from rembg import remove, new_session
 session = new_session("birefnet-general")
 out = remove(input_bytes, session=session)
 ```
 
-### Apify CLI (futuro)
-Instalado vía npm. Para scraping de imágenes complementarias (mockups reales de productos, logos no incluidos en `logos/`). Login con `apify login -t <token>`. Comando base:
-```powershell
-echo '{"queries":["meta ads manager dashboard"],"maxResultsPerQuery":5,"imageSize":"large"}' | apify call hooli/google-images-scraper --silent --output-dataset
+Guardar el resultado en `fotos/_cutouts/<nombre>.png`.
+
+### Apify CLI (workflow de scraping)
+Instalado vía npm. Para scraping de imágenes complementarias (mockups reales de productos, logos no incluidos en `logos/`, imágenes históricas). Login con `apify login -t <token>`. Comando base:
+
+```bash
+python scripts/buscar_imagenes.py \
+  --proj-dir . \
+  --query "<query específica>|<query alternativa>" \
+  --label "<carpeta>" \
+  --max 5
 ```
-Protocolo: pedir validación a Diego ANTES de scrapear, máximo 5 imágenes/query, alta resolución, descargar a `fotos/` con nombres descriptivos.
+
+**Protocolo obligatorio** (documentado en `skill/carruseles.md`):
+1. Mostrar copy completo PRIMERO (Regla de Oro)
+2. Identificar qué slides necesitan imagen real explicativa (vs fondo IA conceptual)
+3. Pedir validación al usuario antes de scrapear con queries específicas
+4. Máximo 5 imágenes por query, `imageSize: large`
+5. Descargar a `fotos/_scraping/<label>/` y mostrar opciones para elegir
+6. Mover las seleccionadas a `fotos/_historicas/` con nombres descriptivos
 
 ## Relación con /historias-ig
 Comparten brief y assets vía junctions/hard-links de Windows (configurados en setup inicial):
@@ -111,8 +149,29 @@ Comparten brief y assets vía junctions/hard-links de Windows (configurados en s
 
 Editar el brief en uno → ambos lo ven. Las skills evolucionan independientes (scripts copiados, no linkeados).
 
+## Catálogo de fotos curado (catalogo_detallado.json)
+Archivo central que mapea cada foto del usuario con:
+- **Contenido visual** (qué muestra)
+- **Zona segura para texto** (🟢 fácil / 🟡 limitada / 🔴 difícil)
+- **Vibe y mejor uso** (hook aspiracional / autoridad / humanización / etc.)
+- **Arcos narrativos asociados** (cada foto pertenece a uno o más arcos de la historia personal del usuario)
+- **Mapeo REPTINAC → fotos sugeridas** (qué fotos usar para cada tipo de contenido)
+- **Frases marca** (banco de citas reutilizables del usuario)
+- **Categorías y subcarpetas** (estructura de `fotos/_*`)
+
+Este archivo es lo que permite que cuando el usuario diga *"hazme un carrusel sobre X"*, Claude pueda **identificar inmediatamente qué fotos del banco usar + qué frases del usuario integrar** sin tener que preguntar foto por foto.
+
 ## Claves
-`KIE_AI_API_KEY` (fondos IA + edición), `APIFY_API_TOKEN` (scraping), Telegram (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`) en `.env` o `config.json`. Nunca subir secretos: `config.json`, `.env`, `fotos/`, `logos/`, `output/` están en `.gitignore`.
+`KIE_AI_API_KEY` (fondos IA + edición), Apify (auto-cargado de `~/.apify/auth.json` después de `apify login`), Telegram (`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`) en `.env` o `config.json`. Nunca subir secretos: `config.json`, `.env`, `catalogo_detallado.json`, `fotos/`, `logos/`, `output/` están en `.gitignore`.
 
 ## Comandos
 `/carruseles` (genera) · `reconfigurar` · `fotos` · `ver` · `enviar` (Telegram).
+
+## Lecciones de este proyecto (lo que aprendimos)
+- ✅ **Cache de fondos IA** (`cache_path`) ahorra mucho dinero al iterar el mismo carrusel — un bug del cache_path costó $0.60 USD en regeneraciones innecesarias en el carrusel "Iglesia vs IA" (ya arreglado).
+- ✅ **Apify funciona excelente para imágenes históricas clásicas** (pinturas dominio público, ukiyo-e, retratos de figuras públicas como el Papa). Resultados muy buenos con queries específicas + `maxResultsPerQuery: 4-5`.
+- ✅ **`birefnet-general` resuelve el bug del dedo fantasmal** que tenía `u2net` con cutouts contra fondos oscuros.
+- ✅ **Composiciones pre-hechas (`compose_*.py`)** son la mejor manera de lograr layouts que el motor no puede hacer (slide CTA con prueba social, cover split de 2 personas, etc.).
+- ❌ **Image-to-image con `nano-banana-pro` NO sirve para preservar identidad/textos exactos** — el modelo reimagina en lugar de editar. Útil solo para edits simples.
+- ❌ **Highlight de TextRun en docx-js** genera `w:highlightCs` inválido — usar color + bold + italic en su lugar.
+- 💸 **Costo típico de un carrusel completo: ~$0.50 USD.** Iteración con cache: $0. Lección: usar `cache_path` religiosamente.

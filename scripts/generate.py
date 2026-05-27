@@ -151,6 +151,39 @@ def download_image(url: str, dest: Path) -> bool:
 
 # ── Renderizado de slides ──────────────────────────────────────────────────────
 
+def resolve_foto_path(proj_dir: Path, nombre: str) -> Path:
+    """Resuelve la ruta de una foto buscando en la estructura organizada:
+      fotos/                    ← fotos originales de Diego
+      fotos/_cutouts/           ← cutouts generados con rembg
+      fotos/_compuestas/        ← composiciones de scripts compose_*.py
+      fotos/_historicas/        ← imagenes scrapeadas via Apify (seleccionadas)
+      fotos/_scraping/.../<f>   ← descargas crudas Apify (cuando se busca recursivo)
+
+    Si el nombre incluye separador (ej. "_cutouts/foo.png") respeta la subruta.
+    Devuelve el primer match. Si no encuentra, devuelve fotos/<nombre>
+    (fallback — el caller decide si manejar la ausencia).
+    """
+    fotos_dir = proj_dir / "fotos"
+    # Si el path ya tiene separador, respetar
+    if "/" in nombre or "\\" in nombre:
+        return fotos_dir / nombre
+    # Buscar en orden de prioridad
+    for sub in (None, "_compuestas", "_cutouts", "_historicas", "_deprecated"):
+        candidate = (fotos_dir / sub / nombre) if sub else (fotos_dir / nombre)
+        if candidate.exists():
+            return candidate
+    # Buscar recursivo en _scraping/* (cada query tiene su carpeta)
+    scraping = fotos_dir / "_scraping"
+    if scraping.exists():
+        for sub in scraping.iterdir():
+            if sub.is_dir():
+                candidate = sub / nombre
+                if candidate.exists():
+                    return candidate
+    # Fallback (no existe) — caller maneja
+    return fotos_dir / nombre
+
+
 def _wrap_lines(draw, text, fnt, max_w):
     words = str(text).split()
     lines, cur = [], []
@@ -393,7 +426,7 @@ def render_slide(slide: dict, idx: int, total: int,
         # El darken del fondo es más suave para que la imagen IA se aprecie.
         img = load_bg(kie_cache[fondo_ia["prompt"]], darken=0.30)
         # Sobreponer la foto cutout transparente
-        foto_path = proj_dir / "fotos" / foto
+        foto_path = resolve_foto_path(proj_dir, foto)
         if foto_path.exists():
             cutout = ImageOps.exif_transpose(Image.open(foto_path)).convert("RGBA")
             escala = slide.get("foto_escala", 0.85)
@@ -412,7 +445,7 @@ def render_slide(slide: dict, idx: int, total: int,
         # Oscurecer el lado opuesto a la foto para legibilidad del texto
         side_gradient_overlay(img, "left" if foto_lado == "right" else "right", strength=0.92)
     elif foto:
-        foto_path = proj_dir / "fotos" / foto
+        foto_path = resolve_foto_path(proj_dir, foto)
         if foto_path.exists():
             # foto_darken: 0.55 default. Subir (0.65–0.80) cuando el contenido de
             # la foto es muy "busy" (screenshot, dashboard).
@@ -478,12 +511,23 @@ def render_slide(slide: dict, idx: int, total: int,
             )
         else:
             # Hook clásico (full-width, texto sobre foto o fondo IA solo).
-            draw_pill(
-                draw,
-                slide.get("etiqueta") or cfg.get("etiqueta_hook", "NUEVA HISTORIA"),
-                120, font(proj_dir, 34), PRIMARY,
-            )
+            # Etiqueta (píldora superior): opcional con opt-out explícito.
+            #  - "etiqueta" no está en el slide → default del config
+            #  - "etiqueta" presente con null/"" → NO dibujar píldora
+            #  - "etiqueta" con valor → dibujar ese valor
+            if "etiqueta" in slide:
+                etiqueta_val = slide.get("etiqueta")
+            else:
+                etiqueta_val = cfg.get("etiqueta_hook", "NUEVA HISTORIA")
+            if etiqueta_val:
+                draw_pill(draw, etiqueta_val, 120, font(proj_dir, 34), PRIMARY)
             y_top, y_bottom = pick_text_band(img, slide.get("texto_pos", "auto"), bool(foto))
+            # Override de banda de texto: util cuando el slide tiene una
+            # composicion pre-hecha y la banda automatica choca con cutouts.
+            if "text_y_top" in slide:
+                y_top = slide["text_y_top"]
+            if "text_y_bottom" in slide:
+                y_bottom = slide["text_y_bottom"]
             draw_fitted_block(draw, proj_dir, [
                 {"text": titulo,    "size": 70, "bold": True,  "color": WHITE,   "stroke": 1, "gap": 20},
                 {"text": subtitulo, "size": 50, "bold": False, "color": PRIMARY, "stroke": 1, "gap": 16},
@@ -522,7 +566,7 @@ def render_slide(slide: dict, idx: int, total: int,
             cutout_present = False
             cta_zone_right = W
             if foto_cutout_name:
-                cutout_path = proj_dir / "fotos" / foto_cutout_name
+                cutout_path = resolve_foto_path(proj_dir, foto_cutout_name)
                 if cutout_path.exists():
                     c_img = ImageOps.exif_transpose(Image.open(cutout_path)).convert("RGBA")
                     # Si es cutout transparente (RGBA con regiones vacías),

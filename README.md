@@ -1,53 +1,54 @@
 # 🎠 Carruseles IG Skill — Claude Code
 
-> Genera **carruseles de Instagram profesionales (1080×1350, 4:5)** con un solo comando en Claude Code. Le dictas el tema, Claude elige la estructura narrativa REPTINAC, escribe el copy persuasivo, genera los fondos con IA y arma los 7–8 slides listos para publicar.
+> Genera **carruseles de Instagram profesionales (1080×1350, 4:5)** con un solo comando. Le dictas el tema, Claude elige la estructura narrativa REPTINAC, escribe el copy persuasivo con tu marca, genera fondos cinematográficos con IA, busca imágenes históricas en Apify cuando hace falta, y arma los 7–8 slides listos para publicar — junto con caption + 30 hashtags listos para copiar.
 
 Skill creada y mantenida por **[Diego Osorio (@soydiegoosorio)](https://instagram.com/soydiegoosorio)**.
 
-Hermana de [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) (formato 9:16) — comparten brief, fotos y logos, pero cada una tiene su propio motor optimizado para su formato.
+Hermana de [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) (formato 9:16) — comparten brief, fotos y logos, pero cada una tiene su motor optimizado para su formato.
 
 ---
 
 ## ✨ ¿Qué hace?
 
-A partir de un tema, genera **7–8 slides 4:5 listos para publicar** con:
+A partir de un **tema + objetivo**, en una sola conversación con Claude obtienes:
 
-- 🧠 **Estructura narrativa** elegida automáticamente entre 8 tipos REPTINAC (Engagement, Polarización, Transformación, Autoridad, etc.).
-- 🎯 **Slide 1 + Slide 2 con doble gancho** — el slide 1 es la portada que para el scroll, el slide 2 es el segundo gancho que IG re-impresiona a quienes ya pasaron por tu carrusel.
-- ✍️ **Copy persuasivo** con 4 ángulos (dolor · automatización · beneficio · resultado concreto), foco en el lector, especificidad numérica.
-- 🖼️ **Fondos** generados con IA (Kie AI) — `google/nano-banana` económico para el ranking, **`nano-banana-pro` premium** para los slides 1 y 2 críticos.
-- 🪄 **Cutouts editoriales** con `rembg birefnet-general` (state-of-the-art para detalles finos como dedos apuntando).
-- 🎨 Tipografía Space Grotesk con tus colores de marca, consistente en TODOS los slides.
-- 🔑 **Palabra clave de CTA** lista para tu automatización de DMs.
-- 📲 **Envío a Telegram** para subir desde el celular sin pasar por la nube.
+1. **Elección automática del tipo REPTINAC** entre 8 fórmulas validadas (Engagement, Polarización, Transformación, Autoridad, Niveles de Consciencia, Conversión…)
+2. **Copy persuasivo aplicado slide por slide** con la Capa de Persuasión: 4 ángulos (dolor · automatización · beneficio · resultado), especificidad numérica, antes/después, foco en el lector
+3. **Slide 1 (cubierta) + Slide 2 (segundo hook) premium** con `nano-banana-pro` — porque Instagram re-impresiona la slide 2 a quienes ya pasaron por el carrusel
+4. **Fondos IA cinematográficos** o **scraping Apify** según el tema (mockups de productos, imágenes históricas, etc.)
+5. **Cutouts de personas con `rembg birefnet-general`** (state-of-the-art para detalles finos como dedos apuntando)
+6. **Caption del post + 30 hashtags** listos para copiar a Instagram
+7. **Envío directo a tu celular por Telegram** para publicar desde el móvil sin pasar por la nube
 
 ---
 
-## 🆕 Mejoras únicas de esta skill (vs `historias-ig-skill`)
+## 🆕 Features avanzadas (lo que la hace distinta a otras skills de IG)
 
-| Feature | Detalle |
+| Feature | Qué resuelve |
 |---|---|
-| **Modo híbrido cover** | Slide 1 con foto cutout a un lado + fondo IA al otro, texto sobre gradient — look magazine editorial. |
-| **Modo "fit" con padding** | Para screenshots que no encajan en 4:5 sin recortarse de los lados (`foto_modo: "fit"`). |
-| **Cutout sin frame + sombra natural** | Sobreposición editorial estilo Skai (vs polaroid rectangular). |
-| **Composiciones pre-hechas** | `compose_cta_bg.py` integra fondo IA cinematográfico + screenshot como card flotante. |
-| **Image-to-image editing** | `kie_edit.py` para editar fotos con `nano-banana-pro` (sube a host público + llama API). |
-| **Detección automática de cara** | `pick_text_band` analiza el canal alpha del cutout y evita la zona del sujeto. |
-| **Tamaños de CTA configurables** | `cta_title_size`, `cta_box_w`, `cta_kw_size`, etc. ajustables por slide. |
-| **Cache de fondos IA** | `cache_path` reusa generaciones previas sin gastar Kie. |
-| **Apify CLI integrado** | Para scraping de imágenes reales complementarias (mockups, logos faltantes). |
+| **Modo híbrido cover** (foto cutout + fondo IA) | Slide 1 con tu cara a un lado y un fondo cinematográfico al otro — look magazine editorial |
+| **Modo "fit" con padding** (`foto_modo: "fit"`) | Para screenshots/dashboards que no encajan en 4:5 sin recortarse de los lados |
+| **`pick_text_band` con detección de cara** | El motor analiza el alpha channel del cutout y NUNCA pone texto encima del sujeto |
+| **`text_y_top` / `text_y_bottom` override** | Cuando una composición pre-hecha necesita banda de texto custom |
+| **Composiciones pre-hechas** (`compose_*.py`) | Slide CTA con screenshot IG + cutout flotante. Cover split (2 personas confrontadas + fondo dramático) |
+| **Apify CLI integrado** (`buscar_imagenes.py`) | Scraping de imágenes históricas/explicativas con workflow validado: máx 5 por query, alta resolución, presenta opciones para elegir |
+| **Image-to-image con `kie_edit.py`** | Edita fotos con `nano-banana-pro` subiéndolas a un host público temporal |
+| **Cache de fondos IA** (`cache_path`) | Reusa generaciones previas → iterar el mismo carrusel cuesta $0 |
+| **Etiqueta de hook con opt-out** (`etiqueta: null`) | Quita la píldora superior cuando el slide no la necesita |
+| **`resolve_foto_path()`** | El motor encuentra fotos en `fotos/_cutouts/`, `_compuestas/`, `_historicas/`, etc. — `plan.json` siempre refiere por nombre |
+| **Catálogo curado con arcos narrativos** | 81 fotos clasificadas con su historia, zona segura de texto y mapeo REPTINAC |
 
 ---
 
 ## 📋 Requisitos
 
 - [Claude Code](https://claude.com/claude-code) instalado
-- **Python 3.10+** con `Pillow`, `requests`, `rembg[cpu]`
-- **Node.js** (para Apify CLI vía npm)
-- macOS, Linux o **Windows** (probado nativo)
-- *(Opcional)* Cuenta de [Kie AI](https://kie.ai) para fondos con IA (sin Kie funciona con fondos sólidos)
+- **Python 3.10+** con `Pillow`, `requests`, `rembg[cpu]` (~970MB para el modelo birefnet la primera vez)
+- **Node.js 18+** (para Apify CLI y el motor de Word de lead magnets, si los usas)
+- macOS, Linux o **Windows** (probado en Windows nativo)
+- *(Opcional)* Cuenta de [Kie AI](https://kie.ai) — fondos con IA, modelos `google/nano-banana` (~$0.02/img) y `nano-banana-pro` premium (~$0.12/img)
+- *(Opcional)* Cuenta de [Apify](https://apify.com) — para scraping de imágenes complementarias (créditos gratis iniciales)
 - *(Opcional)* Un bot de [Telegram](https://telegram.org) para recibir los sets en tu celular
-- *(Opcional)* Cuenta de [Apify](https://apify.com) para scraping de imágenes complementarias
 
 ---
 
@@ -58,25 +59,30 @@ A partir de un tema, genera **7–8 slides 4:5 listos para publicar** con:
 Abre Claude Code, pega esto y envíalo:
 
 ```
-Clona https://github.com/diegodoc11/carruseles-ig-skill.git en ~/carruseles-ig y corre el setup automáticamente según mi sistema operativo
+Clona https://github.com/diegodoc11/carruseles-ig-skill.git en ~/carruseles-ig
+y corre el setup automáticamente según mi sistema operativo
 ```
 
-Cuando termine, **cierra y vuelve a abrir Claude Code** para que detecte el skill.
+Cuando termine, **cierra y vuelve a abrir Claude Code** para que detecte la skill.
 
 ### Opción B — manual
 
 ```bash
 git clone https://github.com/diegodoc11/carruseles-ig-skill.git ~/carruseles-ig
 cd ~/carruseles-ig
+
+# Dependencias Python
 pip install Pillow requests "rembg[cpu]"
+
+# Dependencias Node (para Apify CLI)
 npm install -g apify-cli
 ```
 
-Reinicia Claude Code para que aparezca el comando `/carruseles`.
+Copia `.env.example` a `.env` y llena tus claves. Después reinicia Claude Code.
 
 ### Junctions a `historias-ig` (Windows, opcional)
 
-Si ya tienes [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) instalado y quieres compartir el brief y los assets:
+Si ya tienes [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) y quieres compartir brief y assets:
 
 ```powershell
 $src = "$HOME\historias-ig"
@@ -89,35 +95,43 @@ New-Item -ItemType HardLink -Path "$dst\catalogo_detallado.json" -Target "$src\c
 New-Item -ItemType HardLink -Path "$dst\.env"                    -Target "$src\.env"
 ```
 
-Editar el brief en cualquiera de los dos proyectos lo actualiza en el otro automáticamente.
-
 ---
 
-## 🔧 Configuración
+## 🔧 Configuración paso a paso
 
-### Kie AI (fondos con IA)
-Copia `.env.example` a `.env` y agrega tu clave:
-```
-KIE_AI_API_KEY=tu_clave_aqui
-```
+### 1) Kie AI (fondos con IA) — opcional pero muy recomendado
 
-### Apify (scraping de imágenes complementarias)
-```bash
-apify login -t apify_api_TU_TOKEN
-```
-El token se guarda en `~/.apify/auth.json`.
+1. Crea cuenta en [https://kie.ai](https://kie.ai) (te da créditos gratis iniciales)
+2. Copia tu API key
+3. Pégala en `.env`:
+   ```
+   KIE_AI_API_KEY=tu_clave_aqui
+   ```
 
-### Telegram (recibir los sets en tu celular)
-1. En Telegram, crea un bot con **@BotFather** (`/newbot`) y copia el **token**.
+### 2) Apify (scraping de imágenes) — opcional
+
+1. Crea cuenta en [https://apify.com](https://apify.com)
+2. Copia tu API token de [console.apify.com/account/integrations](https://console.apify.com/account/integrations)
+3. Login local:
+   ```bash
+   apify login -t apify_api_TU_TOKEN
+   ```
+
+### 3) Telegram (recibir sets en tu celular) — opcional
+
+1. En Telegram, abre **@BotFather**, comando `/newbot`, copia el **token**
 2. Pégalo en `.env`:
    ```
-   TELEGRAM_BOT_TOKEN=tu_token_aqui
+   TELEGRAM_BOT_TOKEN=tu_token
    ```
-3. Escríbele "hola" a tu bot y obtén tu *chat id*:
+3. Escríbele "hola" a tu bot. Después obtén tu chat_id:
    ```bash
    python scripts/telegram_enviar.py --proj-dir . --get-chat-id
    ```
-4. Pega el chat id en `.env` (`TELEGRAM_CHAT_ID=...`).
+4. Pégalo en `.env`:
+   ```
+   TELEGRAM_CHAT_ID=tu_chat_id
+   ```
 
 ---
 
@@ -127,7 +141,9 @@ El token se guarda en `~/.apify/auth.json`.
 /carruseles
 ```
 
-La **primera vez** te hace preguntas sobre tu marca (si no comparte config con `historias-ig`). Después, solo dile el **tema + objetivo** del día y genera el set en `output/`.
+**La primera vez** te hace preguntas sobre tu marca (avatar, dolores del nicho, oferta, tono…). Después solo dile el **tema + objetivo** del día y genera el set en `output/`.
+
+### Comandos auxiliares
 
 | Comando | Qué hace |
 |---|---|
@@ -137,46 +153,114 @@ La **primera vez** te hace preguntas sobre tu marca (si no comparte config con `
 | `/carruseles ver` | Abre la última carpeta de output |
 | `/carruseles enviar` | Manda el último set a tu Telegram |
 
+### Flujo dentro de la conversación
+
+```
+Tú        : "carrusel sobre por qué la mayoría fracasa con IA"
+Claude    : Lee tu brief → elige tipo REPTINAC (probablemente Polarización)
+            Propone estructura de 7-8 slides
+            Te muestra el COPY EXACTO de cada slide
+            ⚠️ Espera tu aprobación ANTES de generar imágenes (Regla de Oro)
+Tú        : "aprobado" o "cambia X en slide N"
+Claude    : Identifica qué fotos del catálogo encajan
+            Si hace falta scrapear con Apify, te pide validación
+            Genera fondos IA con nano-banana-pro (slides 1-2) o nano-banana (resto)
+            Renderiza los 8 PNGs a 1080×1350
+            Escribe caption + 30 hashtags
+            Manda todo a tu Telegram
+```
+
 ---
 
-## 📁 Estructura
+## 📁 Estructura del proyecto
 
 ```
 carruseles-ig/
-├── fotos/               ← Pon aquí tus fotos (JPG, PNG, WEBP) — gitignored
-├── logos/               ← Logos de marcas (Claude, Meta, etc) — gitignored
-├── fonts/               ← Space Grotesk — gitignored
-├── output/              ← Los carruseles generados aparecen aquí
+├── fotos/                        ← FOTOS ORIGINALES tuyas (gitignored)
+│   ├── _cutouts/                 ← Cutouts transparentes (rembg birefnet)
+│   ├── _compuestas/              ← Composiciones de scripts (compose_*.py)
+│   ├── _historicas/              ← Apify scraping seleccionado para usar
+│   ├── _scraping/                ← Apify scraping crudo (todas las opciones)
+│   └── _deprecated/              ← Intentos fallidos / versiones obsoletas
+├── logos/                        ← Logos de marcas (Claude, Meta, Apify...) — gitignored
+├── fonts/                        ← Space Grotesk
+├── output/                       ← Los carruseles generados aparecen aquí
 ├── scripts/
-│   ├── generate.py            ← Motor de generación (lee plan.json → 8 PNGs)
-│   ├── utils.py               ← Pipeline de imagen (load_bg cover|fit, fuentes, texto)
-│   ├── scan_fotos.py          ← Escanea y cataloga tus fotos
-│   ├── telegram_enviar.py     ← Envía un set a tu celular vía Telegram
-│   ├── compose_cta_bg.py      ← Compone fondo IA premium + screenshot como card flotante
-│   └── kie_edit.py            ← Edita imágenes con nano-banana-pro (image-to-image)
+│   ├── generate.py               ← Motor de generación (lee plan.json → 8 PNGs)
+│   ├── utils.py                  ← Pipeline de imagen (load_bg cover|fit, fuentes, texto)
+│   ├── scan_fotos.py             ← Escanea y cataloga tus fotos
+│   ├── telegram_enviar.py        ← Envía un set + caption a Telegram
+│   ├── compose_cta_bg.py         ← Compone fondo IA + screenshot IG como card editorial
+│   ├── compose_iglesia_vs_ia.py  ← Ejemplo: cover split (2 cutouts confrontados + fondo dramático)
+│   ├── kie_edit.py               ← Edita imágenes con nano-banana-pro (image-to-image)
+│   ├── buscar_imagenes.py        ← Scraper Apify (google-images-scraper)
+│   └── check_kie.py              ← Health check de la API de Kie
 ├── skill/
-│   ├── carruseles.md          ← El skill de Claude Code (cerebro)
-│   └── biblioteca-contenido.md← 8 tipos REPTINAC (compartida con historias-ig vía hard link)
-├── .env                       ← Tus claves (NO se sube a git)
-├── config.json                ← Tu configuración de marca (gitignored)
-├── CLAUDE.md                  ← Guía técnica del proyecto
-└── README.md                  ← Este archivo
+│   ├── carruseles.md             ← Cerebro de la skill (flujo, reglas, particularidades)
+│   └── biblioteca-contenido.md   ← 8 tipos REPTINAC (compartida con historias-ig)
+├── .env                          ← Tus claves (NO se sube a git)
+├── config.json                   ← Tu brief de marca (gitignored)
+├── catalogo_detallado.json       ← Catálogo curado con arcos narrativos (gitignored)
+├── CLAUDE.md                     ← Guía técnica del proyecto
+└── README.md                     ← Este archivo
 ```
 
-> 🔒 **Privacidad:** `.env`, `config.json`, `fotos/`, `logos/` y `output/` están en `.gitignore`. Tus claves, marca y fotos **nunca** se suben a GitHub.
+> 🔒 **Privacidad:** `.env`, `config.json`, `catalogo_detallado.json`, `fotos/`, `logos/` y `output/` están en `.gitignore`. Tus claves, brief, fotos personales y carruseles generados **nunca** se suben a GitHub.
 
 ---
 
-## 🎯 Particularidades del formato carrusel (vs historias)
+## 🎯 Particularidades del formato carrusel
 
-Carruseles tienen reglas de diseño distintas a historias. La skill las aplica automáticamente:
+La skill aplica automáticamente estas leyes del formato:
 
-1. **Sin barra de progreso interna** — Instagram ya muestra los puntitos del carrusel debajo.
-2. **Slide 1 = portada** decide si la gente desliza o no. Visual + copy muy fuerte.
-3. **Slide 2 = segundo hook** — IG lo re-impresiona a usuarios que ya vieron tu carrusel como recordatorio. Tiene que ser su propio gancho de curiosidad/refuerzo (no arrancar el ranking ahí).
-4. **Densidad de texto permitida MAYOR** — la gente se queda más tiempo en cada slide.
-5. **Save-worthy gana** — el algoritmo de IG premia guardados y compartidos. Cada slide debe sumar valor.
-6. **El motor NUNCA tapa la cara** en cutouts transparentes — analiza el alpha channel y elige una banda libre.
+1. **El slide 1 decide.** Si no para el scroll, todo lo demás muere. Visual + copy muy fuerte.
+2. **El slide 2 es el segundo hook.** Instagram lo re-impresiona a usuarios que ya pasaron por el carrusel — necesita su propio gancho (refuerzo de promesa, dolor, sueño). NO arrancar el ranking ahí.
+3. **El último slide convierte.** CTA con palabra clave → DM.
+4. **Sin barra de progreso interna.** Instagram ya muestra los puntitos del carrusel.
+5. **Densidad de texto MAYOR que en historias.** La gente se queda más tiempo en cada slide.
+6. **Save-worthy gana.** El algoritmo premia guardados y compartidos.
+7. **Slide 1 + 2 con `nano-banana-pro`** (premium). Slides 3+ con `google/nano-banana` standard.
+8. **El motor NUNCA tapa la cara** en cutouts transparentes (detección automática del alpha).
+
+---
+
+## 🪄 Sobre los cutouts (quitar fondo a fotos)
+
+La skill usa **`rembg birefnet-general`** (state-of-the-art 2024, descarga ~970MB la primera vez).
+
+**¿Por qué no usar el modelo default `u2net`?** Tiene un bug conocido: los **dedos delgados** salen semi-transparentes contra fondos oscuros. Síntoma: dedo "fantasmal" que deja ver el fondo a través. `birefnet-general` arregla esto.
+
+```python
+from rembg import remove, new_session
+session = new_session("birefnet-general")
+with open("foto.jpg", "rb") as f:
+    out = remove(f.read(), session=session)
+```
+
+Resultado va a `fotos/_cutouts/<nombre>.png` y se usa con `foto_cutout: "<nombre>.png"` en el plan.
+
+---
+
+## 🔍 Sobre el scraping con Apify (imágenes complementarias)
+
+Cuando un slide necesita una imagen **real explicativa** (un mockup de Claude Code, una pintura histórica, un dashboard real…), la skill usa **Apify** con el actor `hooli/google-images-scraper`.
+
+### Protocolo obligatorio (definido en `skill/carruseles.md`)
+
+1. **Primero el copy completo** — Regla de Oro se aplica también aquí
+2. **Identificar qué slides necesitan imagen real** vs cuáles funcionan con fondo IA conceptual
+3. **Pedir validación a Diego** antes de scrapear: *"Para el slide N propongo scrapear con query X. ¿Procedo?"*
+4. **Queries específicas, no genéricas:** `Galileo Galilei trial Inquisition 1633 historical painting` (no `galileo`)
+5. **Máximo 5 imágenes por query**, `imageSize: large`
+6. **Descargar a `fotos/_scraping/<query>/`** y mostrar opciones para elegir
+
+```bash
+python scripts/buscar_imagenes.py \
+  --proj-dir . \
+  --query "Pope Francis official portrait Vatican|Pope Leo XIV official portrait" \
+  --label "papa" \
+  --max 4
+```
 
 ---
 
@@ -184,19 +268,46 @@ Carruseles tienen reglas de diseño distintas a historias. La skill las aplica a
 
 | Concepto | Costo |
 |---|---|
-| 5 fondos IA standard (`google/nano-banana`) | ~$0.10 USD |
-| 2 fondos IA premium para slide 1 y 2 (`nano-banana-pro`) | ~$0.24 USD |
+| 2 fondos IA premium (slides 1+2 con `nano-banana-pro`) | ~$0.24 USD |
+| 5 fondos IA standard (slides 3-7 con `google/nano-banana`) | ~$0.10 USD |
 | 1 composición editorial (`compose_cta_bg.py`) | ~$0.12 USD |
-| **Total típico carrusel completo** | **~$0.46 USD** |
+| Apify scraping (4-5 queries) | ~$0.00 (créditos gratis iniciales) |
+| **Total carrusel completo** | **~$0.46 USD** |
 
-Reusar fondos previos con `cache_path` = $0. La skill automáticamente reusa caches cuando aplica.
+**Reutilización con `cache_path`:** iterar el mismo carrusel cuesta **$0** (reusa fondos generados previamente).
+
+### Recarga de créditos Kie sugerida
+
+| Si recargas… | Te alcanza para… |
+|---|---|
+| $5 USD | ~3-4 carruseles completos |
+| $10 USD | ~7-8 carruseles |
+| $20 USD | 1 mes de contenido (15+ carruseles) |
 
 ---
 
-## 🪟 Nota para Windows
+## 🚨 Aprendizajes importantes (lecciones de este proyecto)
+
+### Lo que NO funciona
+
+- ❌ **Image-to-image con `nano-banana-pro` para preservar identidad** — la IA "reimagina" la imagen en lugar de editar pixel-perfect. Resultados: caras alteradas, textos truncados, números cambiados. Solo úsalo para edits simples sin contenido crítico.
+- ❌ **El modelo `u2net` de rembg para dedos** — bug del alpha en bordes finos contra fondos oscuros. Usar siempre `birefnet-general`.
+- ❌ **Highlight en TextRun de docx-js** — genera elemento `w:highlightCs` inválido en el schema XML. Usar color + bold + italic en su lugar.
+
+### Lo que SÍ funciona
+
+- ✅ **Fondos IA cinematográficos premium para slides 1 y 2** — `nano-banana-pro` brilla cuando se le pide ambiente/atmósfera (cityscape, ruinas, catedral) sin elementos que tenga que "respetar".
+- ✅ **Apify para imágenes históricas clásicas** — pinturas de dominio público, ukiyo-e, retratos de figuras históricas. Resultados muy buenos.
+- ✅ **`cache_path` en el plan.json** — ahorra dinero al iterar.
+- ✅ **Composiciones pre-hechas (`compose_*.py`)** — control total del layout cuando el motor no alcanza (slide CTA editorial, cover split).
+- ✅ **`birefnet-general` para cutouts** — calidad state-of-the-art con dedos definidos, pelo limpio.
+
+---
+
+## 🪟 Notas para Windows
 
 - Usa **siempre** `python -X utf8` cuando ejecutes scripts (la consola Windows no es UTF-8 por defecto).
-- Si "Python no encontrado" aunque lo tengas instalado, desactiva los *alias de la Microsoft Store*: **Configuración → Aplicaciones → Alias de ejecución de aplicaciones →** apaga `python.exe` y `python3.exe`. O instala Python desde [python.org](https://python.org) marcando "Add to PATH".
+- Si "Python no encontrado" aunque lo tengas instalado, desactiva los *alias de la Microsoft Store*: Configuración → Aplicaciones → Alias de ejecución de aplicaciones → apaga `python.exe` y `python3.exe`.
 - Junctions/hard-links se crean con `New-Item -ItemType Junction|HardLink` (no requiere admin en Windows 10+).
 
 ---
@@ -205,6 +316,8 @@ Reusar fondos previos con `cache_path` = $0. La skill automáticamente reusa cac
 
 Creada y mantenida por **[Diego Osorio — @soydiegoosorio](https://instagram.com/soydiegoosorio)**.
 
-Esta skill es parte de un stack de herramientas que uso para gestionar mi marca personal en Instagram (209k seguidores). Junto con [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) y mis otras automatizaciones con IA, me permite producir contenido como un equipo de 10 trabajando solo unas horas al día.
+Esta skill es parte de un stack de herramientas con IA que usa Diego (más de **209 mil seguidores** en Instagram, **+$1 Millón USD vendidos**, **+$300K invertidos** en negocios). Junto con [`historias-ig-skill`](https://github.com/diegodoc11/historias-ig-skill) y las otras automatizaciones, le permite producir contenido como un equipo de 10 trabajando solo unas horas al día.
 
-Si esta skill te sirve, sígueme en [@soydiegoosorio](https://instagram.com/soydiegoosorio) para más automatizaciones con IA y guías paso a paso. 🚀
+> *"No soy el más inteligente. La IA me dio superpoderes."* — Diego
+
+Si esta skill te sirve, sígueme en [@soydiegoosorio](https://instagram.com/soydiegoosorio) para más automatizaciones con IA, guías paso a paso y mi comunidad **Imperio** donde están las plantillas listas para usar. 🚀

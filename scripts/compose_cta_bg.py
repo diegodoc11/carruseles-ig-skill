@@ -138,7 +138,8 @@ def main():
     url = kie_generate(prompt, kie_key, "nano-banana-pro")
     if not url:
         sys.exit("❌ Kie no devolvió URL")
-    bg_path = fotos_dir / "_editorial_bg.png"
+    bg_path = fotos_dir / "_compuestas" / "_editorial_bg.png"
+    bg_path.parent.mkdir(parents=True, exist_ok=True)
     download_image(url, bg_path)
     print(f"  ✓ fondo descargado: {bg_path.name}")
 
@@ -191,7 +192,8 @@ def main():
     bg.alpha_composite(grad)
 
     # Guardar
-    dst = fotos_dir / "Screen Instagram editorial.png"
+    dst = fotos_dir / "_compuestas" / "Screen Instagram editorial.png"
+    dst.parent.mkdir(parents=True, exist_ok=True)
     bg.convert("RGB").save(dst, "PNG", optimize=True)
     print(f"✓ composición guardada: {dst}")
 

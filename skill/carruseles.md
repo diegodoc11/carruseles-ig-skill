@@ -240,6 +240,39 @@ Luego escanea fotos (Paso 4). Si no hay fotos, indica agregarlas en `{{PROJ_DIR}
 
 ---
 
+## 📁 ESTRUCTURA DE LA CARPETA `fotos/`
+
+```
+fotos/                  ← FOTOS ORIGINALES de Diego (intactas, no tocar)
+├── _cutouts/           ← Cutouts transparentes (rembg)
+├── _compuestas/        ← Composiciones de scripts (compose_*.py)
+├── _historicas/        ← Apify scraping seleccionado para uso editorial
+├── _scraping/          ← Apify scraping crudo (todas las opciones por query)
+│   ├── papa/
+│   ├── otomano/
+│   └── ...
+└── _deprecated/        ← Intentos fallidos / versiones obsoletas
+```
+
+**Regla de oro:** las fotos de Diego viven en `fotos/` raíz. Todo lo que GENERA o DESCARGA la skill va a una subcarpeta con prefijo `_`. Nunca mezclar.
+
+**En el `plan.json`** basta con poner el **nombre del archivo** (sin path). El motor tiene `resolve_foto_path()` que busca automáticamente en todas las subcarpetas en este orden:
+1. `fotos/` (originales)
+2. `fotos/_compuestas/`
+3. `fotos/_cutouts/`
+4. `fotos/_historicas/`
+5. `fotos/_deprecated/`
+6. `fotos/_scraping/*/`
+
+Si necesitas forzar una ubicación específica, pasa el path con separador: `"foto": "_deprecated/Diego apuntando.png"`.
+
+**Cuando agregues archivos:**
+- Cutout nuevo con rembg → guardar en `fotos/_cutouts/`
+- Composición de script → guardar en `fotos/_compuestas/`
+- Imagen Apify seleccionada para un carrusel → mover de `_scraping/` a `_historicas/` con nombre descriptivo (ej: `historico galileo inquisicion.jpg`)
+
+---
+
 ## 🪄 CUTOUTS (quitar fondo a fotos)
 
 Para crear cutouts transparentes de personas/objetos usamos la librería `rembg`.
