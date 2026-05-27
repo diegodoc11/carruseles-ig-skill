@@ -240,6 +240,209 @@ Luego escanea fotos (Paso 4). Si no hay fotos, indica agregarlas en `{{PROJ_DIR}
 
 ---
 
+## 🧭 LO QUE FUNCIONA vs LO QUE NO (lecciones reales del proyecto)
+
+Este proyecto produjo 3 carruseles publicables. Esta sección documenta lo que funcionó al primer intento vs lo que requirió 6+ iteraciones (señal de que NO es el approach correcto).
+
+### ✅ LO QUE FUNCIONA (usar SIEMPRE)
+
+1. **Split LATERAL (izq/derecha) con cutouts limpios + fondo IA premium**
+   - Ejemplo: carrusel "Iglesia vs IA" slide 1 (Papa cutout izq + Diego cutout der + fondo IA "catedral vs servidores")
+   - Se aprobó en 2 iteraciones
+   - Script: `compose_iglesia_vs_ia.py` (reusable cambiando paths)
+
+2. **Cover híbrido del motor** (foto cutout + fondo IA premium)
+   - El motor de `generate.py` lo hace nativamente con `foto` + `fondo_ia` (`modo_hibrido` true)
+   - Foto cutout va a un lado (`foto_lado`), fondo IA llena el resto, texto en mitad opuesta
+   - Más rápido que las composiciones manuales
+
+3. **Fondos IA cinematográficos con nano-banana-pro** (slides 1 y 2)
+   - Prompts atmosféricos sin gente ni texto: "cinematic editorial photo of X, dramatic lighting, premium magazine quality, lower third clear for text overlay, no people, no text"
+   - Funciona muy bien para slides 1 y 2 (los más importantes)
+
+4. **Composición editorial CTA** (screenshot IG + cutout apuntando + caja palabra clave)
+   - `compose_cta_bg.py` para el fondo
+   - El motor del CTA con `foto_cutout` sobrepuesto sin frame
+   - Cutout debe ser "Diego apuntando v2" (apunta al screenshot → autoridad)
+
+5. **Apify scraping para imágenes históricas/culturales clásicas**
+   - Pinturas de dominio público, ukiyo-e, retratos de figuras públicas
+   - Resultados consistentes con queries específicas
+
+6. **Cutouts con rembg `birefnet-general`** (no `u2net`)
+   - Detalles finos como dedos apuntando salen perfectos
+
+### ❌ LO QUE NO FUNCIONA (evitar)
+
+1. **Split VERTICAL (arriba/abajo) con composiciones complejas**
+   - Intenté "Diego con hot dogs sepia arriba + Diego con BMW abajo" en el carrusel JARVIS
+   - Resultado: 6+ iteraciones, nunca quedó profesional
+   - Cuando ambas mitades tienen un sujeto humano, los cuerpos se alinean visualmente y CONFUNDEN al lector
+   - **Mejor alternativa cuando hay arco antes/después**: split LATERAL (como Papa vs Diego), o usar UNA SOLA FOTO completa + texto encima
+
+2. **Sobreponer elementos pequeños sobre fotos donde hay caras**
+   - Intenté sobreponer Iron Man en la esquina superior derecha del slide hot dogs y TAPÓ la cara de Diego
+   - Hay que validar EXHAUSTIVAMENTE que no haya solape con cara
+   - **Mejor alternativa**: posicionar en padding negro inferior/superior, o esquina OPUESTA a la cara del sujeto principal
+
+3. **Image-to-image con nano-banana-pro para preservar identidad**
+   - Intentamos: convertir screenshot IG a dark mode → cambió la cara
+   - Intentamos: quitar lanyard VIP de cutout → reinterpretó la camisa + cambió cara
+   - **Conclusión**: el modelo es generativo, no editor pixel-perfect. NO sirve para edits con contenido crítico
+
+4. **Asumir que Claude "ve como diseñador"**
+   - Claude puede generar layouts técnicamente correctos pero perder la intuición visual del diseñador profesional
+   - **Solución**: aplicar EXPLÍCITAMENTE el checklist post-render (sección abajo) en cada slide, leyendo el PNG con Read tool
+
+5. **Empezar a "mejorar" un slide ya aprobado**
+   - Pasó con el slide 1 de JARVIS: la v1 estaba aprobada (carrusel_1550), después iteré 6 veces innecesariamente
+   - **Solución**: cuando el usuario aprueba algo, COPIAR la imagen a `_compuestas/<nombre>_aprobado.png` y referenciarla en el plan. No regenerar.
+
+### 📐 WORKFLOW VALIDADO (sigue siempre este orden)
+
+1. **Identificar tipo REPTINAC** (consultar `biblioteca-contenido.md`)
+2. **Mostrar copy completo PRIMERO** (Regla de Oro — esperar OK explícito)
+3. **Identificar fotos del catálogo** que encajen (consultar `catalogo_detallado.json`)
+4. **Para slide 1**: usar cover híbrido SIEMPRE (cutout + fondo IA premium)
+5. **Para slide 2**: refuerzo con fondo IA premium o foto fuerte del catálogo
+6. **Slides 3-7**: fotos del catálogo o fondos IA standard (`google/nano-banana` $0.02)
+7. **Slide CTA**: composición editorial con screenshot IG + cutout apuntando + caja palabra clave
+8. **Renderizar todo**
+9. **CHECKLIST POST-RENDER OBLIGATORIO** (sección abajo) — leer cada PNG y validar
+10. **Si pasa el checklist → mandar a Telegram con caption + hashtags**
+11. **Si el usuario aprueba un slide → marcarlo como aprobado** (copiar a `_compuestas/_aprobado/`)
+12. **Si el usuario pide iterar otro → NO tocar los ya aprobados**
+
+### 💰 Costo típico aplicando este workflow
+
+- 2 fondos IA premium nano-banana-pro: $0.24
+- 5 fondos IA standard google/nano-banana: $0.10
+- 1 composición editorial: $0.12
+- **Total carrusel completo: ~$0.46 USD**
+
+Iterar el mismo carrusel cuesta $0 si se usa `cache_path` religiosamente.
+
+---
+
+## 🔮 SKILL HERMANA FUTURA: `carruseles-premium` (todo con nano-banana-pro)
+
+Diego va a crear una skill hermana que usa `nano-banana-pro` para TODOS los slides + genera el texto incrustado en la imagen (no con motor PIL). Más cara (~$1.20 por carrusel) pero más cinematográfica.
+
+**Cuándo usar `/carruseles` (esta skill, económica):**
+- Producción regular semanal
+- Carruseles donde el copy cambia rápido (iterar texto sin gastar IA)
+- Cuando la marca tipográfica importa (Space Grotesk consistente)
+
+**Cuándo usar `/carruseles-premium` (la futura, cara):**
+- Lanzamientos importantes
+- Casos donde se necesita una composición que el motor no puede hacer
+- Sin importar costo
+
+Esta skill (la económica) seguirá siendo la default para Diego. La premium es para ocasiones especiales.
+
+---
+
+## 🔖 REGLA — VERSIONES APROBADAS NO SE TOCAN
+
+Cuando el usuario aprueba un slide (dice "me gustó", "queda bien", "dejémoslo así"), **MARCAR INMEDIATAMENTE esa versión como aprobada** copiándola a `fotos/_compuestas/<descriptivo>_aprobado.png` y referenciándola en el plan.
+
+**Si el usuario pide iterar OTRO slide después**, NO regenerar el slide aprobado — usar `cache_path` o referencia directa al archivo aprobado.
+
+Errores históricos del proyecto:
+- ❌ Slide 1 del carrusel JARVIS: aprobado en versión 1 (carrusel_1550), después regenerado 6 veces hasta que el usuario tuvo que recordar dónde estaba la versión que sí le gustaba.
+
+**Cuando el usuario diga "dejémoslo así" o "me gustó":**
+1. Copiar el archivo a `fotos/_compuestas/<nombre>_aprobado.png`
+2. Actualizar plan.json para apuntar a esa imagen como `foto` directa
+3. Vaciar `titulo`/`subtitulo`/`texto_extra` si la imagen ya tiene texto incrustado
+4. NO volver a generar/componer esa versión salvo que el usuario lo pida explícitamente
+
+---
+
+## 🚨 REGLA SAGRADA — NO TAPAR LA CARA
+
+**ABSOLUTAMENTE NUNCA un texto, logo, cutout, sticker, polaroid o cualquier elemento puede tapar la cara del sujeto (Diego u otra persona) en un slide.** Si Claude renderiza un slide y un elemento tapa una cara, es un BUG crítico que se debe arreglar antes de mandar a aprobación.
+
+### Cómo evitarlo
+
+1. **Antes de posicionar cualquier elemento sobrepuesto** (Iron Man, polaroid, cutout adicional, logo grande):
+   - Identificar visualmente la zona de la cara del sujeto principal en la foto base
+   - Calcular si el elemento sobrepuesto va a solapar con esa zona
+   - Si sí: reposicionar a una zona libre (esquina inferior, padding negro, lateral opuesto)
+
+2. **Zonas seguras típicas** para sobreponer elementos sin tapar caras:
+   - Padding negro inferior (modo fit con foto landscape)
+   - Padding negro superior (cuando el texto está abajo)
+   - Esquina opuesta a la cara (si la cara está arriba-derecha, sobreponer abajo-izquierda)
+
+3. **Después de renderizar**, OBLIGATORIO mirar el slide y confirmar:
+   - ¿Veo la cara del sujeto completamente?
+   - ¿Algún elemento decorativo le pasa por la frente, ojos, nariz, boca?
+   - Si sí → reposicionar y re-renderizar antes de mandar al usuario
+
+### Bugs históricos de este tipo en el proyecto
+
+- ❌ Texto del slide 5 (resultado BMW) caía sobre la cara de Diego apoyado en el BMW → arreglado con `texto_pos: "bottom"`
+- ❌ Texto del slide 8 (cierre emocional) tapaba la cara de Diego.PNG → arreglado con `texto_pos: "bottom"`
+- ❌ Iron Man cutout sobrepuesto en slide 1 (hot dogs) tapaba la cara de Diego → arreglado moviendo a esquina inferior derecha en padding negro
+
+**Esta regla aplica también a textos**, no solo a elementos visuales. Cuando uses `texto_pos: "auto"`, verificar el resultado y ajustar a `"top"`/`"bottom"` si el motor eligió mal.
+
+---
+
+## 🎨 REVISIÓN POST-RENDER (rol diseñador profesional)
+
+**OBLIGATORIO:** después de renderizar el carrusel, antes de mandarlo a Telegram, Claude tiene que **abrir cada slide PNG con la Read tool y revisarlo como diseñador profesional** aplicando este checklist:
+
+### Checklist por slide
+
+1. **Composición narrativa**
+   - Si es un "antes/después": ¿la persona aparece en AMBAS mitades? (No carrito vs persona — eso rompe la narrativa)
+   - ¿La foto del slide cuenta visualmente lo que dice el copy? (Ej. si el texto habla de libertad, ¿la foto muestra eso?)
+
+2. **No tapar caras**
+   - ¿El texto cae sobre la cara del sujeto? Si sí → cambiar `texto_pos` a `bottom` o usar `text_y_top/bottom` custom
+   - Bug recurrente: `texto_pos: "auto"` con foto cover puede elegir mal
+
+3. **Cover crop / fit decisions**
+   - Si la foto es landscape y el sujeto está a un lado, cover crop puede DEJARLO FUERA
+   - Verificar: ¿el sujeto principal está visible después del cover crop?
+   - Si no: usar `foto_modo: "fit"` o hacer cutout y posicionar manualmente
+
+4. **Contraste de texto**
+   - Texto blanco sobre fondo claro = ilegible. Texto naranja sobre fondo naranja = bajo contraste.
+   - Si el slide tiene cutouts/composición con gradient, verificar que el texto caiga sobre zona oscura
+
+5. **Cutouts correctos**
+   - ¿Estoy usando el cutout adecuado para el slide? (apuntando hacia arriba para CTA con screenshot, sorpresa para cierre emocional, etc.)
+   - Diego apuntando v2 = para CTAs con autoridad (apunta al screenshot)
+   - Diego.PNG = para slides de sorpresa/curiosidad
+
+6. **Lista vertical legible**
+   - Si hay lista (items con bullets), ¿está VERTICAL una debajo de otra? (No una línea con puntos)
+   - Bullet "•" funciona. ✅/✓ NO funcionan (Space Grotesk no los tiene → cuadrado fallback feo)
+
+7. **Logos correctos**
+   - ¿El logo que aparece es el correcto? (Verificar manualmente — el slug puede mapear a archivo equivocado)
+   - Quitar logos si dominan visualmente y compiten con el copy
+
+### Si encuentras algún problema
+
+1. Reportar al usuario qué viste y qué propones
+2. NO mandar a Telegram hasta que el problema esté arreglado
+3. Iterar: ajustar plan / composición / motor → re-render → revisar de nuevo
+
+### Lecciones aprendidas del proyecto
+
+- ❌ Si el texto cae sobre la cara: `texto_pos: "bottom"` o ajustar bandas
+- ❌ Si la persona se sale del cover crop: usar cutout + composición manual
+- ❌ Si emojis ✅/✓ se ven como cuadrados: cambiar a "•" o "→" (Latin Extended)
+- ❌ Si el "antes/después" muestra carrito vs persona: hacer cutout de la persona y poner persona en AMBAS mitades
+- ✅ Cover híbrido (foto cutout + fondo IA) funciona muy bien para slide 1
+- ✅ Composiciones pre-hechas (`compose_*.py`) son la solución cuando el motor no puede hacer el layout
+
+---
+
 ## 📁 ESTRUCTURA DE LA CARPETA `fotos/`
 
 ```

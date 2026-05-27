@@ -185,17 +185,27 @@ def resolve_foto_path(proj_dir: Path, nombre: str) -> Path:
 
 
 def _wrap_lines(draw, text, fnt, max_w):
-    words = str(text).split()
-    lines, cur = [], []
-    for w in words:
-        test = " ".join(cur + [w])
-        if draw.textbbox((0, 0), test, font=fnt)[2] > max_w and cur:
-            lines.append(" ".join(cur)); cur = [w]
-        else:
-            cur.append(w)
-    if cur:
-        lines.append(" ".join(cur))
-    return lines
+    """Word-wrap que RESPETA los saltos de línea explícitos (\n).
+    Cada párrafo separado por \n se wrap-ea de forma independiente — útil
+    para listas verticales (ej. texto_extra con ✅ Item1\n✅ Item2)."""
+    all_lines = []
+    paragraphs = str(text).split("\n")
+    for paragraph in paragraphs:
+        words = paragraph.split()
+        if not words:
+            all_lines.append("")  # línea en blanco intencional
+            continue
+        lines, cur = [], []
+        for w in words:
+            test = " ".join(cur + [w])
+            if draw.textbbox((0, 0), test, font=fnt)[2] > max_w and cur:
+                lines.append(" ".join(cur)); cur = [w]
+            else:
+                cur.append(w)
+        if cur:
+            lines.append(" ".join(cur))
+        all_lines.extend(lines)
+    return all_lines
 
 
 def draw_fitted_block(draw, proj_dir, blocks, y_top, y_bottom, max_w=950, anchor="center", center_x=None):
@@ -494,11 +504,18 @@ def render_slide(slide: dict, idx: int, total: int,
             else:
                 text_cx = int(W * 0.75)   # ≈ 810
             text_maxw = 440
-            draw_pill(
-                draw,
-                slide.get("etiqueta") or cfg.get("etiqueta_hook", "NUEVA HISTORIA"),
-                100, font(proj_dir, 30), PRIMARY, center_x=text_cx,
-            )
+            # Etiqueta opcional con opt-out explícito (mismo patrón que el
+            # branch clásico): null/"" en el slide = NO dibujar píldora;
+            # ausente = usar default del config.
+            if "etiqueta" in slide:
+                etiqueta_val = slide.get("etiqueta")
+            else:
+                etiqueta_val = cfg.get("etiqueta_hook", "NUEVA HISTORIA")
+            if etiqueta_val:
+                draw_pill(
+                    draw, etiqueta_val,
+                    100, font(proj_dir, 30), PRIMARY, center_x=text_cx,
+                )
             # Banda de texto generosa, layout fijo (sin pick_text_band).
             draw_fitted_block(
                 draw, proj_dir,
@@ -646,21 +663,27 @@ def render_slide(slide: dict, idx: int, total: int,
                 {"text": titulo, "size": title_size, "bold": True, "color": WHITE, "stroke": 1, "gap": 0},
             ], y_top=730, y_bottom=860, max_w=cta_maxw, center_x=cta_cx, anchor="top")
             y += 12
-            cv_f = font(proj_dir, verbo_size)
-            cv_w = draw.textlength(cta_verbo, font=cv_f)
-            draw.text((cta_cx - int(cv_w) // 2, y), cta_verbo, font=cv_f, fill=DIM)
-            y += verbo_size + 14
-            box_h = int(box_w * 0.26)
-            bx = cta_cx - box_w // 2
-            draw.rounded_rectangle([bx, y, bx + box_w, y + box_h], radius=20,
-                                   fill=(*YELLOW, 50), outline=YELLOW, width=3)
-            kw_f = font(proj_dir, kw_size, bold=True)
-            bb = draw.textbbox((0, 0), cta_palabra, font=kw_f)
-            kx = cta_cx - (bb[2] - bb[0]) // 2
-            draw.text((kx + 2, y + (box_h - kw_size) // 2 + 2), cta_palabra, font=kw_f, fill=(0, 0, 0, 120))
-            draw.text((kx, y + (box_h - kw_size) // 2), cta_palabra, font=kw_f, fill=YELLOW,
-                      stroke_width=2, stroke_fill=YELLOW)
-            y += box_h + 22
+            # Verbo + caja amarilla con palabra clave: opcionales.
+            # Si cta_palabra es null/"" → CTA conversacional (sin caja amarilla
+            # ni "Comenta"). Solo título + subtítulo + handle.
+            if cta_palabra:
+                cv_f = font(proj_dir, verbo_size)
+                cv_w = draw.textlength(cta_verbo, font=cv_f)
+                draw.text((cta_cx - int(cv_w) // 2, y), cta_verbo, font=cv_f, fill=DIM)
+                y += verbo_size + 14
+                box_h = int(box_w * 0.26)
+                bx = cta_cx - box_w // 2
+                draw.rounded_rectangle([bx, y, bx + box_w, y + box_h], radius=20,
+                                       fill=(*YELLOW, 50), outline=YELLOW, width=3)
+                kw_f = font(proj_dir, kw_size, bold=True)
+                bb = draw.textbbox((0, 0), cta_palabra, font=kw_f)
+                kx = cta_cx - (bb[2] - bb[0]) // 2
+                draw.text((kx + 2, y + (box_h - kw_size) // 2 + 2), cta_palabra, font=kw_f, fill=(0, 0, 0, 120))
+                draw.text((kx, y + (box_h - kw_size) // 2), cta_palabra, font=kw_f, fill=YELLOW,
+                          stroke_width=2, stroke_fill=YELLOW)
+                y += box_h + 22
+            else:
+                y += 30  # gap mínimo si no hay caja
             # cta_show_handle: false oculta el @marca al pie (cuando el
             # slide ya muestra el handle de otra forma, ej. via screenshot
             # de IG visible arriba).

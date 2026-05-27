@@ -167,6 +167,33 @@ Este archivo es lo que permite que cuando el usuario diga *"hazme un carrusel so
 ## Comandos
 `/carruseles` (genera) · `reconfigurar` · `fotos` · `ver` · `enviar` (Telegram).
 
+## ⚠️ LIMITACIONES CONOCIDAS (lo que Claude NO puede hacer bien)
+
+Esta skill produjo 3 carruseles publicables. Estas son las limitaciones honestas, documentadas tras múltiples iteraciones:
+
+### Lo que SÍ funciona consistentemente
+- **Split lateral (izq/derecha) con cutouts + fondo IA premium** — ej: Papa cutout izq + Diego cutout der + catedral/servidores
+- **Cover híbrido nativo del motor** (foto cutout + fondo IA)
+- **Fondos IA cinematográficos** con `nano-banana-pro` (atmósferas sin gente)
+- **Composición editorial CTA** con screenshot IG + cutout apuntando
+- **Apify scraping** para imágenes históricas/culturales clásicas (pinturas dominio público, ukiyo-e)
+- **Cutouts con `birefnet-general`** (no `u2net` — bug del dedo fantasmal)
+
+### Lo que NO funciona (Claude tiende a fallar)
+- **Split vertical (arriba/abajo) con composiciones complejas** — los cuerpos se confunden, requiere 6+ iteraciones
+- **Sobreponer elementos pequeños sobre caras** — Claude no tiene intuición visual del diseñador y mete stickers/iconos donde tapan caras
+- **Image-to-image con `nano-banana-pro` para preservar identidad** — el modelo es generativo, no editor pixel-perfect. Cambia caras y textos
+- **Asumir "le va a quedar bien" sin validar** — siempre aplicar el checklist post-render del skill brain
+
+### Reglas operativas críticas
+1. **REGLA SAGRADA**: NUNCA tapar la cara del sujeto con texto, logo, cutout, sticker. Antes de posicionar cualquier elemento sobrepuesto, identificar la zona de la cara y validar que no haya solape.
+2. **REGLA DE VERSIONES APROBADAS**: cuando el usuario dice "me gustó" o "dejémoslo así", COPIAR la imagen a `fotos/_compuestas/<nombre>_aprobado.png` y referenciarla. NO regenerar.
+3. **REGLA DE ORO**: NUNCA generar imágenes sin que el usuario apruebe el copy slide por slide.
+
+Estas reglas están documentadas más en detalle en `skill/carruseles.md`.
+
+---
+
 ## Lecciones de este proyecto (lo que aprendimos)
 - ✅ **Cache de fondos IA** (`cache_path`) ahorra mucho dinero al iterar el mismo carrusel — un bug del cache_path costó $0.60 USD en regeneraciones innecesarias en el carrusel "Iglesia vs IA" (ya arreglado).
 - ✅ **Apify funciona excelente para imágenes históricas clásicas** (pinturas dominio público, ukiyo-e, retratos de figuras públicas como el Papa). Resultados muy buenos con queries específicas + `maxResultsPerQuery: 4-5`.

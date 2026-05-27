@@ -286,6 +286,31 @@ python scripts/buscar_imagenes.py \
 
 ---
 
+## ⚠️ Limitaciones honestas (qué funciona y qué no)
+
+Esta skill ha producido carruseles publicables, pero NO es magia. Después de iterar 3 carruseles distintos, estas son las limitaciones reales:
+
+### ✅ Lo que la skill hace MUY BIEN (úsala así)
+- **Slide 1 con cover híbrido**: cutout tuyo a un lado + fondo IA cinematográfico al otro
+- **Slide 2 con fondo IA premium**: refuerzo de hook con `nano-banana-pro`
+- **Slides 3-7 con fotos del catálogo** + datos persuasivos
+- **Slide CTA editorial**: screenshot IG + cutout apuntando + caja con palabra clave
+- **Caption + 30 hashtags** automáticos coherentes con el carrusel
+- **Apify scraping** para imágenes históricas/culturales clásicas
+
+### ❌ Lo que tiende a fallar (evita pedirlo así)
+- **Split vertical (foto arriba + foto abajo)** con personas en ambas mitades → los cuerpos se confunden y Claude no logra el balance visual al primer intento. Mejor split LATERAL (izq/der).
+- **Sobreponer stickers/iconos pequeños sobre tu cara** → Claude no tiene intuición de diseñador y mete elementos donde tapan caras. Hay que validar SLIDE por SLIDE después de renderizar.
+- **Editar fotos con IA** (quitar un objeto, cambiar a dark mode, etc.) → los modelos generativos reinterpretan en lugar de editar pixel-perfect. Mejor usar Photoshop / Photopea / la app del celular.
+
+### 🎯 Cómo obtener el mejor resultado
+1. **Aprueba el COPY antes que las imágenes** (Regla de Oro de la skill)
+2. **Cuando un slide te guste, dile "aprobado"** — la skill marca esa versión y NO la toca
+3. **Si algo NO te convence visualmente**, dilo CLARO ("muévelo a la esquina inferior", "no tapes mi cara", etc.) — Claude no lo ve solo
+4. **Para slide 1 usa siempre cover híbrido** con cutout + fondo IA premium — es el approach con mejor track record
+
+---
+
 ## 🚨 Aprendizajes importantes (lecciones de este proyecto)
 
 ### Lo que NO funciona
