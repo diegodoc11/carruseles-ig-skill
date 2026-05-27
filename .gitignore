@@ -1,0 +1,25 @@
+# Credenciales y datos personales — NO publicar
+.env
+config.json
+catalogo.json
+catalogo_detallado.json
+plan*.json
+
+# Lead magnets / recursos privados del autor (CTAs a comunidad propia)
+scripts/build_lead_magnet*.js
+
+# Carpetas compartidas con historias-ig (son junctions a su carpeta).
+# Ignorar el junction entero para que git no lo trate como contenido propio.
+fonts/
+fotos/
+logos/
+
+# Salidas de generación y caches de Python
+output/*
+!output/.gitkeep
+__pycache__/
+*.pyc
+.DS_Store
+
+# Otros proyectos
+bellanova/
