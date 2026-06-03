@@ -208,10 +208,17 @@ def _wrap_lines(draw, text, fnt, max_w):
     return all_lines
 
 
-def draw_fitted_block(draw, proj_dir, blocks, y_top, y_bottom, max_w=950, anchor="center", center_x=None):
+def draw_fitted_block(draw, proj_dir, blocks, y_top, y_bottom, max_w=950, anchor="center", center_x=None,
+                      grow=True, max_scale=1.55, fill=0.92):
     """Dibuja varios bloques de texto centrados, escalando la fuente para que
-    todo quepa dentro de [y_top, y_bottom]. blocks: lista de dicts con
+    aprovechen [y_top, y_bottom]. blocks: lista de dicts con
     {text, size, bold, color, stroke, gap}.
+
+    - Si el texto NO cabe → se encoge hasta caber (piso scale 0.5).
+    - Si el texto SÍ cabe y `grow=True` → se AGRANDA hasta llenar ~`fill` de la
+      banda (tope `max_scale`), para que un bloque corto no quede diminuto con
+      mucho espacio sobrando. `grow=False` conserva el tamaño base (útil en
+      layouts ya calibrados, ej. el CTA).
 
     center_x: punto x sobre el que centrar el texto. Si es None, centra sobre
     todo el lienzo (W/2). Útil para layouts laterales (ej. cover híbrido con
@@ -220,22 +227,42 @@ def draw_fitted_block(draw, proj_dir, blocks, y_top, y_bottom, max_w=950, anchor
     if center_x is None:
         center_x = W // 2
     blocks = [b for b in blocks if b.get("text")]
-    scale = 1.0
-    rendered, total = [], 0
-    for _ in range(16):
+    if not blocks:
+        return y_top
+    band_h = y_bottom - y_top
+
+    def _measure(scale):
         rendered, total = [], 0
         for b in blocks:
             s = max(22, int(b["size"] * scale))
             fnt = font(proj_dir, s, bold=b.get("bold", False))
             lines = _wrap_lines(draw, b["text"], fnt, max_w)
             lh = s + max(6, int(14 * scale))
-            block_h = lh * len(lines)
             rendered.append((b, fnt, lines, lh))
-            total += block_h + int(b.get("gap", 26) * scale)
-        if total <= (y_bottom - y_top) or scale <= 0.5:
-            break
-        scale *= 0.92
-    y = y_top + max(0, ((y_bottom - y_top) - total) // 2) if anchor == "center" else y_top
+            total += lh * len(lines) + int(b.get("gap", 26) * scale)
+        return rendered, total
+
+    scale = 1.0
+    rendered, total = _measure(scale)
+    if total > band_h:
+        # No cabe → encoger hasta caber.
+        for _ in range(16):
+            if total <= band_h or scale <= 0.5:
+                break
+            scale *= 0.92
+            rendered, total = _measure(scale)
+    elif grow:
+        # Cabe con holgura → crecer hasta llenar la banda (tope max_scale).
+        for _ in range(16):
+            if scale >= max_scale:
+                break
+            nxt = min(max_scale, scale * 1.06)
+            r2, t2 = _measure(nxt)
+            if t2 > band_h * fill:
+                break
+            scale, rendered, total = nxt, r2, t2
+
+    y = y_top + max(0, (band_h - total) // 2) if anchor == "center" else y_top
     for b, fnt, lines, lh in rendered:
         stroke = b.get("stroke", 0)
         for line in lines:
@@ -661,7 +688,7 @@ def render_slide(slide: dict, idx: int, total: int,
             # Render del CTA
             y = draw_fitted_block(draw, proj_dir, [
                 {"text": titulo, "size": title_size, "bold": True, "color": WHITE, "stroke": 1, "gap": 0},
-            ], y_top=730, y_bottom=860, max_w=cta_maxw, center_x=cta_cx, anchor="top")
+            ], y_top=730, y_bottom=860, max_w=cta_maxw, center_x=cta_cx, anchor="top", grow=False)
             y += 12
             # Verbo + caja amarilla con palabra clave: opcionales.
             # Si cta_palabra es null/"" → CTA conversacional (sin caja amarilla
@@ -696,7 +723,7 @@ def render_slide(slide: dict, idx: int, total: int,
                 # quitar el gap del subtítulo si no hay handle abajo
                 blocks[0]["gap"] = 0
             draw_fitted_block(draw, proj_dir, blocks,
-                              y_top=y, y_bottom=1310, max_w=cta_maxw, center_x=cta_cx, anchor="top")
+                              y_top=y, y_bottom=1310, max_w=cta_maxw, center_x=cta_cx, anchor="top", grow=False)
         else:
             # Layout clásico full-canvas (sin foto de fondo).
             y = draw_fitted_block(draw, proj_dir, [
@@ -725,6 +752,12 @@ def render_slide(slide: dict, idx: int, total: int,
     else:
         # Slides genéricos: problema, revelacion, beneficios, prueba
         y_top, y_bottom = pick_text_band(img, slide.get("texto_pos", "auto"), bool(foto))
+        # Override de banda (útil en slides con lista larga: una banda más alta
+        # deja que la letra crezca y se aproveche el espacio sobrante).
+        if "text_y_top" in slide:
+            y_top = slide["text_y_top"]
+        if "text_y_bottom" in slide:
+            y_bottom = slide["text_y_bottom"]
         draw_fitted_block(draw, proj_dir, [
             {"text": titulo,    "size": 68, "bold": True,  "color": WHITE,   "stroke": 1, "gap": 22},
             {"text": subtitulo, "size": 48, "bold": False, "color": PRIMARY, "stroke": 1, "gap": 18},
