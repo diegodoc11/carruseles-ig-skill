@@ -198,6 +198,22 @@ Orden de prioridad por slide:
 
 La **cubierta (slide 1)** lleva el visual más impactante del carrusel. El texto se coloca solo en la zona despejada (`texto_pos: "auto"`).
 
+### 🎨 Modo ILUSTRATIVO (preferido): que la imagen CUENTE lo que dice el texto
+
+Por defecto, **el `fondo_ia` debe ILUSTRAR el texto del slide**, no ser un fondo genérico. Antes de escribir cada prompt, **LEE el texto del slide** y conviértelo en una escena concreta que lo ejemplifique.
+
+1. **Personaje/estilo consistente en TODO el carrusel.** Elige una mascota o estilo que encaje con el tema y repítelo en los 8 slides (ej. para "equipo de IAs": *robotsitos blancos estilo Pixar, ojos/acentos naranja*). La consistencia es lo que lo hace ver pro.
+2. **Cada slide ilustra su idea** (lee el texto → acción/objeto): "IA de contenido" → robot con ícono de Instagram · "IA de anuncios" → robot con megáfono · "captación" → robot armando una landing/VSL · "seguimiento" → robot con teléfono en una llamada · "equipo de IAs" → varios robots con badge · "empresa con empleados" → robots en computadores (oficina).
+3. **Deja SIEMPRE la mitad inferior despejada** (el texto va abajo, `texto_pos: "bottom"`). Cierra el prompt con: `..., the lower half a clean solid dark empty area reserved for text, no text, no words, no letters`.
+4. **Personajes ilustrados SÍ, humanos realistas NO.** Pide el personaje explícito; el `no text, no words, no letters` evita que el modelo escriba (el texto lo pone el motor).
+5. **Modelo:** slides 1-2 con `nano-banana-pro` (escenas con varios personajes salen mucho mejor en premium); slides 3+ con `google/nano-banana`.
+
+**Plantilla:** `[estilo render] of [personaje consistente] [acción que ilustra el texto], [props del concepto], deep black background with warm orange accents, the lower half a clean solid dark empty area reserved for text, no text, no words, no letters`
+
+**Ejemplo validado (slide "IA de anuncios"):** `Pixar-style 3D render of a single cute friendly rounded white robot with a glowing orange visor face holding a megaphone, several small glowing advertisement screens floating around it in the upper half, cinematic studio lighting, deep black background with warm orange accents, the lower half a clean solid dark empty area reserved for text, no text, no words, no letters`
+
+> El modo **atmosférico** clásico (escena sin personajes) sigue válido para el slide CTA o como alternativa, pero el **modo ilustrativo es el preferido** en slides de valor/explicativos. Validado en el carrusel "Tu equipo de IAs / Imperio".
+
 ---
 
 ## ONBOARDING (primer uso) — Brief de Marca

@@ -195,6 +195,7 @@ Estas reglas están documentadas más en detalle en `skill/carruseles.md`.
 ---
 
 ## Lecciones de este proyecto (lo que aprendimos)
+- ✅ **Modo ILUSTRATIVO de fondos IA (gran salto):** el `fondo_ia` debe ILUSTRAR lo que dice el texto del slide con un personaje/mascota consistente (ej. robotsitos Pixar con su herramienta: ícono de Instagram, megáfono, teléfono) y la mitad inferior despejada para el texto. Mucho más claro y vendedor que fondos genéricos. Guía completa en `skill/carruseles.md` → "Modo ILUSTRATIVO". Validado en el carrusel "Tu equipo de IAs / Imperio".
 - ✅ **Cache de fondos IA** (`cache_path`) ahorra mucho dinero al iterar el mismo carrusel — un bug del cache_path costó $0.60 USD en regeneraciones innecesarias en el carrusel "Iglesia vs IA" (ya arreglado).
 - ✅ **Apify funciona excelente para imágenes históricas clásicas** (pinturas dominio público, ukiyo-e, retratos de figuras públicas como el Papa). Resultados muy buenos con queries específicas + `maxResultsPerQuery: 4-5`.
 - ✅ **`birefnet-general` resuelve el bug del dedo fantasmal** que tenía `u2net` con cutouts contra fondos oscuros.
