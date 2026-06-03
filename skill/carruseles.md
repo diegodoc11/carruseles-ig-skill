@@ -214,6 +214,10 @@ Por defecto, **el `fondo_ia` debe ILUSTRAR el texto del slide**, no ser un fondo
 
 > El modo **atmosférico** clásico (escena sin personajes) sigue válido para el slide CTA o como alternativa, pero el **modo ilustrativo es el preferido** en slides de valor/explicativos. Validado en el carrusel "Tu equipo de IAs / Imperio".
 
+### 📸 REGLA — al menos UNA foto real de la marca por carrusel
+
+El modo ilustrativo es genial, pero **NUNCA entregues un carrusel 100% ilustraciones/fondos sin una sola foto de la persona de la marca** (Diego): pierde la conexión humana — es un error. Incluye su foto en al menos un slide que encaje (portada, el slide de "yo"/diferenciación, autoridad o el cierre), aplicando la Regla Sagrada (texto abajo, cara despejada). Antes de entregar, **verifica que el carrusel tenga ≥1 foto real suya.**
+
 ---
 
 ## ONBOARDING (primer uso) — Brief de Marca
